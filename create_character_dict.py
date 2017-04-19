@@ -2,9 +2,20 @@ import curses
 import argparse
 from pattern.en import parsetree
 from time import sleep
+from sqlalchemy import create_engine
+from sqlalchemy.orm import sessionmaker
+import model
 
+
+################################
+# parse command line arguments #
+################################
 parser = argparse.ArgumentParser(
-    description='Create character networks from plaintext.')
+    description='Character dictionary from plain text,' +
+                'in a relational database')
+parser.add_argument('--db_url',
+                    default='sqlite:///characters.sqlite',
+                    help='DB URL, default: sqlite:///characters.sqlite')
 parser.add_argument('--text',
                     type=argparse.FileType('r'), required=True,
                     help='a plain text file')
@@ -14,6 +25,17 @@ parser.add_argument('--distance',
 args = parser.parse_args()
 
 
+####################
+# database connect #
+####################
+engine = create_engine(args.db_url)
+Session = sessionmaker(bind=engine)
+session = Session()
+
+model.Base.metadata.create_all(engine)
+model.session = session
+
+
 class Tagger:
 
     def __init__(self, stdscr, text):
@@ -21,7 +43,8 @@ class Tagger:
         self.screen = stdscr
         self.tree = parsetree(text)
         self.current_sentence = 0
-
+        self.current_character = ''
+        
     def get_sentence(self):
         return self.tree[self.current_sentence].string
 
