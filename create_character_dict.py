@@ -43,11 +43,29 @@ class Tagger:
         self.screen = stdscr
         self.tree = parsetree(text)
         self.current_sentence = 0
-        self.current_character = ''
-        
+        self.current_word = 0
+        self.word = self.tree.words[0]
+
     def get_sentence(self):
         return self.tree[self.current_sentence].string
 
+    def next_word(self):
+        if self.current_word < len(self.tree.words):
+            self.current_word += 1
+            self.word = self.tree.words[self.current_word]
+            self.current_sentence = list(
+                self.tree.sentences).index(
+                    self.word.sentence)
+
+    def prev_word(self):
+        if self.current_word > 0:
+            self.current_word -= 1
+            self.word = self.tree.words[self.current_word]
+            self.current_sentence = list(
+                self.tree.sentences).index(
+                    self.word.sentence)
+
+            
     def next_character(self):
         self.current_sentence += 1
         while 'NNP' not in \
@@ -61,19 +79,18 @@ class Tagger:
                                                  (self.current_sentence * 100.0)
                                                  / len(self.tree.sentences))
 
-    def render_sentence(self):
+    def render_sentences(self):
         sentence = self.get_sentence()
         # show sentence
         self.screen.addstr(3, 0,
                            sentence,
                            curses.color_pair(2))
-        # color characters
-        for c in self.tree[self.current_sentence].nouns:
-            if c.pos == 'NNP':
-                x = sentence.index(c.string)
-                self.screen.addstr(3, x,
-                                   c.string,
-                                   curses.color_pair(3))
+
+        # color current word
+        x = sentence.index(self.word.string)
+        self.screen.addstr(3, x,
+                           self.word.string,
+                           curses.color_pair(3))
 
     def render_pos(self):
         # print sentence number
@@ -82,7 +99,7 @@ class Tagger:
                            curses.color_pair(1))
 
     def render(self):
-        self.render_sentence()
+        self.render_sentences()
         self.render_pos()
         self.screen.refresh()
 
@@ -103,20 +120,19 @@ def main(stdscr):
         t.render()
 
         c = stdscr.getch()
-        if c == ord('P'):
-            if t.current_sentence > 0:
-                t.screen.clear()
-                t.current_sentence -= 1
 
-        elif c == ord('N'):
-            if t.current_sentence < len(t.tree.sentences):
-                t.screen.clear()
-                t.current_sentence += 1
-
-        elif c == ord('c') or c == ord('C'):
+        if c == ord('c') or c == ord('C'):
             if t.current_sentence < len(t.tree.sentences):
                 t.screen.clear()
                 t.next_character()
+
+        elif c == ord('n'):
+            t.next_word()
+            t.screen.clear()
+
+        elif c == ord('p'):
+            t.prev_word()
+            t.screen.clear()
 
         elif c == curses.KEY_HOME:
             t.current_sentence = 0
