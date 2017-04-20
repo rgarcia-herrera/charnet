@@ -72,8 +72,10 @@ class Tagger:
 
     def next_character(self):
         self.word = session.query(model.Word).\
-                    filter(model.Word.pos == 'NNP').\
-                    filter(model.Word.id > self.current_word).first()
+                    filter(model.Word.id > self.current_word).\
+                    filter((model.Word.pos == 'NNP')
+                           | (model.Word.pos == 'NNPS')).\
+                    first()
         self.current_word = self.word.id
         self.sentence = self.word.sentence
         self.current_sentence = self.sentence.id
@@ -94,7 +96,7 @@ class Tagger:
                                w.word,
                                color)
 
-    def render_pos(self):
+    def render_status(self):
         pos = "sentence %s of %s (%0.2d%%) [word %s of %s]" \
               % \
               (self.current_sentence,
@@ -109,14 +111,17 @@ class Tagger:
                session.query(model.Word).count()
                )
 
-        # print sentence number
         self.screen.addstr(0, 0,
                            pos,
                            curses.color_pair(1))
 
+        self.screen.addstr(1, self.word.x,
+                           "[%s]" % self.word.pos,
+                           curses.color_pair(1))
+
     def render(self):
         self.render_sentences()
-        self.render_pos()
+        self.render_status()
         self.screen.refresh()
 
 
