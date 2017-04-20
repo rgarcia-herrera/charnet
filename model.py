@@ -59,4 +59,17 @@ class Sentence(Base):
     def __repr__(self):
         return "<s%s '%s'>" % (self.id, self.sentence)
 
-    
+    def set_word_coords(self):
+        offset = 0
+        y = 3
+        x = 0
+        for w in self.words:
+            y = 3 + offset / 70
+            x = offset % 70
+            #if y > 3:
+            #    x -= 1
+
+            w.x = x
+            w.y = y
+
+            offset += len(w.word) + 1
