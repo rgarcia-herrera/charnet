@@ -1,9 +1,7 @@
 import argparse
 from pattern.en import parsetree
-from time import sleep
 from sqlalchemy import create_engine
 from sqlalchemy.orm import sessionmaker
-from textwrap import TextWrapper
 import model
 
 description = """Extract using pattern, transform into character model, load to a
@@ -25,7 +23,6 @@ parser.add_argument('--text',
 
 args = parser.parse_args()
 
-wrapper = TextWrapper(break_long_words=False)
 
 ####################
 # database connect #
