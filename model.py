@@ -6,6 +6,8 @@ from sqlalchemy.ext.declarative import declarative_base
 
 Base = declarative_base()
 
+session = None
+
 
 class Character(Base):
     __tablename__ = 'characters'
@@ -17,6 +19,37 @@ class Character(Base):
 
     def __repr__(self):
         return "<chr%s %s %s>" % (self.id, self.name, self.aliases)
+
+    def seek_next_unmarked(self):
+        if ' ' in self.name:
+            parts = self.name.split(' ')
+            w = session.query(
+                Word).filter(
+                    Word.word.like('%'+parts[0]+'%')).filter(
+                        Word.character == None
+                    ).first()
+            if w is None:
+                return []
+            else:
+                return [w, ] + [session.query(Word).get(w.id + n)
+                                for n in range(1, len(parts))]
+        else:
+            w = session.query(
+                Word).filter(
+                    Word.word.like('%'+self.name+'%')).filter(
+                        Word.character == None
+                    ).first()
+            if w:
+                return [w, ]
+            else:
+                return []
+
+    def mark_all(self):
+        while self.seek_next_unmarked():
+            for w in self.seek_next_unmarked():
+                print w
+                w.character = self
+                session.commit()
 
 
 class Alias(Base):
