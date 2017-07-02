@@ -138,3 +138,10 @@ def seek_unmarked_name():
             nextw = session.query(Word).get(w.id + n)
 
         return nnp
+
+
+def ignore(word):
+    for w in session.query(Word).filter(Word.ignore == False)\
+                                .filter(Word.word == word).all():
+        w.ignore = True
+        session.commit()
